@@ -1,0 +1,71 @@
+package services;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
+import repositories.EntryRegisterRepository;
+import domain.EntryRegister;
+import domain.Item;
+
+@Service
+@Transactional
+public class EntryRegisterService {
+	@Autowired
+	private EntryRegisterRepository entryRegisterRepository;
+//	Supporting services ----------------------------------------
+
+//	Simple CRUD methods ----------------------------------------
+	public EntryRegister create(Item item){
+		EntryRegister result=new EntryRegister();
+		
+		result.setItem(item);
+		result.setCreationDate(new Date());
+		
+		return result;
+	}
+	
+	public EntryRegister findOne(int entryRegister){
+		EntryRegister result;
+		result=entryRegisterRepository.findOne(entryRegister);
+		return result;
+	}
+	
+	public Collection<EntryRegister> findAll(){
+		Collection<EntryRegister> result;
+		result=entryRegisterRepository.findAll();
+		return result;
+	}
+	
+	public void save(EntryRegister entryRegister){
+		Assert.notNull(entryRegister);
+		entryRegisterRepository.save(entryRegister);
+	}
+	
+	public void delete(EntryRegister entryRegister){
+		Assert.notNull(entryRegister);
+		entryRegisterRepository.delete(entryRegister);
+	}
+	
+//	Other business methods -------------------------------------
+	
+	public Collection<EntryRegister> findByItem(int itemId){		
+		Collection<EntryRegister> result=entryRegisterRepository.findByItemId(itemId);
+		return result;
+	}
+	
+	public Collection<EntryRegister> findAfterDate(Date date){		
+		Collection<EntryRegister> result=entryRegisterRepository.findAfterDate(date);
+		return result;
+	}
+	public Collection<EntryRegister> findAfterDateFromItem(int itemId,Date date){		
+		Collection<EntryRegister> result=entryRegisterRepository.findByItemAfterDate(itemId, date);
+		return result;
+	}
+}

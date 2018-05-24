@@ -1,0 +1,80 @@
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+
+<%@taglib prefix="jstl" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@taglib prefix="tiles" uri="http://tiles.apache.org/tags-tiles"%>
+<%@taglib prefix="spring" uri="http://www.springframework.org/tags"%>
+<%@taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
+<%@taglib prefix="security"	uri="http://www.springframework.org/security/tags"%>
+<%@taglib prefix="display" uri="http://displaytag.sf.net"%>
+<%@ taglib prefix="acme" tagdir="/WEB-INF/tags" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+
+
+<form:form action="${requestURI}" modelAttribute="invoice">
+
+	<form:hidden path="id"/>
+	<form:hidden path="version"/>
+	<form:hidden path="creationDate"/>
+
+	<spring:message code="invoice.orderNumber"/>
+	<jstl:out value="${orderNumber}"/>
+	
+	<fieldset>
+		<legend align="left">
+			<spring:message code="invoice.fieldset1"></spring:message>
+		</legend>
+		
+		<spring:message code="invoice.customer.name"/>
+		<jstl:out value="${customer.name}"/>
+		<br/>
+		<spring:message code="invoice.customer.surname"/>
+		<jstl:out value="${customer.surname}"/>
+		<br/>
+		<spring:message code="invoice.customer.address"/>
+		<jstl:out value="${customer.address}"/>
+		<br/>
+		<spring:message code="invoice.customer.contactPhone"/>
+		<jstl:out value="${customer.contactPhone}"/>
+		<br/>
+		<spring:message code="invoice.customer.email"/>
+		<jstl:out value="${customer.email}"/>
+		<br/>
+	</fieldset>
+		
+	<fieldset>
+		<legend align="left">
+			<spring:message code="invoice.fieldset2"></spring:message>
+		</legend>
+		
+		<display:table name="lines" id="row" requestURI="${requestURI}" pagesize="5" class="displaytag">
+			<spring:message code="invoice.line.name" var="item.name"/>
+			<display:column property="item.name" title="${item.name}" sortable="true" />
+			
+			<spring:message code="invoice.line.quantity" var="quantity"/>
+			<display:column property="quantity" title="${quantity}" sortable="true" />
+			
+		</display:table>
+		
+		<spring:message code="invoice.totalPrice"/>
+		<jstl:out value="${totalPrice.amount}"/>
+		<jstl:out value="${totalPrice.currency}"/>
+		<br/>
+	</fieldset>
+		
+	<fieldset>
+		<legend align="left">
+			<spring:message code="invoice.fieldset3"></spring:message>
+		</legend>
+	</fieldset>	
+	
+	
+	<acme:submit name="save" code="invoice.accept"/>
+	
+	<input type="button" name="return"
+		value="<spring:message code="invoice.return"/>"
+		onClick="javascript: window.location.replace('customer/shoppingCart.do');"
+	/>
+	
+</form:form>

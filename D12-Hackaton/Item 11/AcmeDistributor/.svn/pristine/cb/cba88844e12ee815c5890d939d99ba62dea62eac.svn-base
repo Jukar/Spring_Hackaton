@@ -1,0 +1,155 @@
+package services;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import javax.persistence.RollbackException;
+import org.apache.commons.lang.time.DateUtils;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.transaction.TransactionConfiguration;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+import domain.ShoppingCart;
+import domain.Item;
+import security.LoginService;
+import security.UserAccount;
+import utilities.AbstractTest;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations={
+		"classpath:spring/datasource.xml",
+		"classpath:spring/config/packages.xml"})
+@SuppressWarnings("unused")
+@Transactional
+@TransactionConfiguration(defaultRollback = true)
+public class ShoppingCartServiceTest extends AbstractTest{
+	
+	// ------------------- Supporting services -------------------
+	
+	@Autowired
+	private ShoppingCartService shoppingCartService;
+	@Autowired
+	private ItemService itemService;
+	
+	//----------------------------------------------------
+	// POSITIVE TEST CASES
+	//----------------------------------------------------
+	
+	//A user who is not authenticated must be able to:
+	//List all the Shopping Carts that the system stores.
+	//Without any logged user, we will try to obtain all shoppingCarts.
+	@Test
+	public void testListAll(){
+		Collection<ShoppingCart> all=shoppingCartService.findAll();
+		Assert.isTrue(all.size()==3);
+	}
+	
+	//A user who is authenticated as Customer must be able to:
+	//Find his shoppingCart.
+	//With an existing customer, we will try to obtain his Shopping Cart.
+	@Test
+	public void testFindByCustomer(){
+		authenticate("cust1");
+		
+		ShoppingCart sC=shoppingCartService.findByShoppingCustomer();
+		Assert.notNull(sC);
+		
+		unauthenticate();
+	}
+		
+	//A user who is authenticated as an Customer must be able to:
+	//Create his ShoppingCart.
+	//With an existing Customer we will try to create a Shopping Cart.
+	@Test
+	public void testCreateAndSave(){
+		authenticate("cust1");
+		
+		ShoppingCart shoppingCart = shoppingCartService.create();
+		shoppingCartService.save(shoppingCart);
+		
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as an Customer must be able to:
+	//Edit his Shopping Cart.
+	//With an existing Customer we will try to edit his Shopping Cart.
+	@Test
+	public void testEditAndSave(){
+		authenticate("cust1");
+		
+		ShoppingCart shoppingCartDB = shoppingCartService.findAll().iterator().next();
+		shoppingCartDB.setLines(null);
+		
+		shoppingCartService.save(shoppingCartDB);
+		
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as an Customer must be able to:
+	//Delete one of his shoppingCarts.
+	//With an existing Customer we will try to delete an existing shoppingCart.
+	@Test
+	public void testDelete(){
+		authenticate("cust1");
+		
+		ShoppingCart shoppingCartDB = shoppingCartService.findAll().iterator().next();
+		shoppingCartService.delete(shoppingCartDB);
+
+		unauthenticate();
+	}
+	
+	
+	//----------------------------------------------------
+	// NEGATIVE TEST CASES
+	//----------------------------------------------------
+	
+	
+	//A user who is authenticated as Customer must be able to:
+	//Find his shoppingCart.
+	//Without an existing customer, we will try to obtain his Shopping Cart.
+	@Test(expected=IllegalArgumentException.class)
+	public void testFindByCustomerException(){
+		
+		ShoppingCart sC=shoppingCartService.findByShoppingCustomer();
+		Assert.notNull(sC);
+	}
+		
+	//A user who is authenticated as an Customer must be able to:
+	//Create his ShoppingCart.
+	//Without an existing Customer we will try to create a Shopping Cart.
+	@Test(expected=IllegalArgumentException.class)
+	public void testCreateAndSaveException(){
+		
+		ShoppingCart shoppingCart = shoppingCartService.create();
+		shoppingCartService.save(shoppingCart);
+	}
+	
+	//A user who is authenticated as an Customer must be able to:
+	//Edit his Shopping Cart.
+	//Without an existing Customer we will try to edit his Shopping Cart.
+	@Test(expected=IllegalArgumentException.class)
+	public void testEditAndSaveException(){
+		
+		ShoppingCart shoppingCartDB = shoppingCartService.findAll().iterator().next();
+		shoppingCartDB.setCustomer(null);
+		
+		shoppingCartService.save(shoppingCartDB);
+	}
+	
+	//A user who is authenticated as an Customer must be able to:
+	//Delete one of his shoppingCarts.
+	//With an existing Customer we will try to delete a null object.
+	@Test(expected=IllegalArgumentException.class)
+	public void testDeleteException(){
+		authenticate("cust1");
+		
+		shoppingCartService.delete(null);
+		
+		unauthenticate();
+	}
+}

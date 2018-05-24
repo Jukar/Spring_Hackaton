@@ -1,0 +1,47 @@
+package domain;
+
+import java.util.Collection;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
+@Entity
+@Access(AccessType.PROPERTY)
+public class SellingItem extends Item{
+//Attributes --------------------------------------------------------------
+//Getters&Setters ---------------------------------------------------------
+//Relationships------------------------------------------------------------
+	private Warehouse warehouse;
+	private Collection<EntryRegister> entryRegisters;
+	private Collection<Tax> taxes;
+	
+	@ManyToOne(optional = false)
+	public Warehouse getWarehouse() {
+		return warehouse;
+	}
+	public void setWarehouse(Warehouse warehouse) {
+		this.warehouse = warehouse;
+	}
+	
+	@OneToMany(cascade = CascadeType.ALL,mappedBy="sellingItem")
+	public Collection<EntryRegister> getEntryRegisters() {
+		return entryRegisters;
+	}
+	public void setEntryRegisters(Collection<EntryRegister> entryRegisters) {
+		this.entryRegisters = entryRegisters;
+	}
+	
+	@ManyToMany(cascade={CascadeType.ALL})
+	public Collection<Tax> getTaxes() {
+		return taxes;
+	}
+	public void setTaxes(Collection<Tax> taxes) {
+		this.taxes = taxes;
+	}
+	
+}

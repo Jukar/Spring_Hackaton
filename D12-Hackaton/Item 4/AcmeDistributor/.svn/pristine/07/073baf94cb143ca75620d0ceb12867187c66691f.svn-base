@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- * PopulateDatabase.xml * * Copyright (C) 2014 Universidad de Sevilla 
+	* * The use of this project is hereby constrained to the conditions of the 
+	* TDG Licence, a copy of which you may download from * http://www.tdg-seville.info/License.html -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	">
+
+	<!-- User accounts -->
+
+	<bean id="userAccount1" class="security.UserAccount">
+		<property name="username" value="distri1" />
+		<property name="password" value="6a7e55d956c5538583fc3b1d2c2ea463" />
+		<property name="authorities">
+			<list>
+				<bean class="security.Authority">
+					<property name="authority" value="DISTRIBUTOR" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="userAccount2" class="security.UserAccount">
+		<property name="username" value="distri2" />
+		<property name="password" value="170752a1bed4132f699d5541bfd374ff" />
+		<property name="authorities">
+			<list>
+				<bean class="security.Authority">
+					<property name="authority" value="DISTRIBUTOR" />
+				</bean>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- Other domain beans come here -->
+	<bean id="inbox1" class="domain.Folder">
+		<property name="messages">
+			<list>
+			</list>
+		</property> 
+	</bean>
+	<bean id="outbox1" class="domain.Folder">
+		<property name="messages">
+			<list>
+			</list>
+		</property> 
+	</bean>
+  
+	<bean id="inbox2" class="domain.Folder">
+		<property name="messages">
+			<list>
+			</list>
+		</property> 
+	</bean>
+	<bean id="outbox2" class="domain.Folder">
+		<property name="messages">
+			<list>
+			</list>
+		</property> 
+	</bean>
+	
+	
+	<bean id="distri1" class="security.Distributor">
+		<property name="userAccount">
+			<ref bean="userAccount1"/>
+		</property>
+		<property name="code" value="Distr1"/>
+		<property name="name" value="Alfonso"/>
+		<property name="surname" value="de Rojas"/>
+		<property name="address" value="C\Inventada nº1 21012, Ciudad"/>
+		<property name="birthday" value="19/01/1991"/>
+		<property name="contactPhone" value="923234411"/>
+		<property name="email" value="distr@gmail.com"/>
+		<property name="inbox">
+			<ref bean="inbox1"/>
+		</property>
+		<property name="outbox">
+			<ref bean="outbox1"/>
+		</property>
+		<property name="warehouses">
+			<list>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="distri2" class="security.Distributor">
+		<property name="userAccount">
+			<ref bean="userAccount2"/>
+		</property>
+		<property name="code" value="Distr2"/>
+		<property name="name" value="Mercedes"/>
+		<property name="surname" value="de Verdes"/>
+		<property name="address" value="C\Noexiste nº3 21012, Ciudad"/>
+		<property name="birthday" value="12/03/1993"/>
+		<property name="contactPhone" value="321746676"/>
+		<property name="email" value="merche@gmail.com"/>
+		<property name="inbox">
+			<ref bean="inbox2"/>
+		</property>
+		<property name="outbox">
+			<ref bean="outbox2"/>
+		</property>
+		<property name="warehouses">
+			<list>
+			</list>
+		</property>
+	</bean>
+</beans>

@@ -1,0 +1,20 @@
+# messages_es.properties
+#
+# Copyright (C) 2013 Universidad de Sevilla
+# 
+# The use of this project is hereby constrained to the conditions of the 
+# TDG Licence, a copy of which you may download from 
+# http://www.tdg-seville.info/License.html
+
+warehouse.name				=	Nombre
+warehouse.address			=	Dirección
+warehouse.contactPhone		=	Teléfono
+warehouse.email				=	Email
+warehouse.distributor.name	=	Responsable
+
+warehouse.save				=	Guardar
+warehouse.delete			=	Borrar
+warehouse.create			=	Crear
+warehouse.return			=	Volver
+warehouse.edit				=	Editar
+warehouse.listEntryReg		=	List entry registers

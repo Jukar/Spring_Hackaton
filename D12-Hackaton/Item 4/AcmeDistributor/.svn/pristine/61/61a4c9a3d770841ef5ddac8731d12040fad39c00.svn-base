@@ -1,0 +1,25 @@
+# messages.properties
+#
+# Copyright (C) 2013 Universidad de Sevilla
+# 
+# The use of this project is hereby constrained to the conditions of the 
+# TDG Licence, a copy of which you may download from 
+# http://www.tdg-seville.info/License.html
+
+invoice.creationDate	= Creation date
+invoice.totalPrice		= Total price: 
+invoice.orderNumber		= Order number: 
+
+invoice.accept			=	Accept
+invoice.fieldset1		=	Customer Data
+invoice.fieldset2		=	Shopping list
+invoice.return			=	Cancel
+
+invoice.fieldset3		=	Shipping
+invoice.line.quantity			=	Quantity
+invoice.line.name			=	Item
+invoice.customer.name		=	Name: 
+invoice.customer.surname	=	Surname: 
+invoice.customer.address	=	Address: 
+invoice.customer.contactPhone	=	Contact phone: 
+invoice.customer.email		=	Mail

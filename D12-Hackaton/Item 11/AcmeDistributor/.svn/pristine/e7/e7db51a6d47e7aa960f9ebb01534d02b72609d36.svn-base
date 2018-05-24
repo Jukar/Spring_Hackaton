@@ -1,0 +1,202 @@
+package services;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import javax.persistence.RollbackException;
+import org.apache.commons.lang.time.DateUtils;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.transaction.TransactionConfiguration;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+import domain.Invoice;
+import domain.ShoppingCart;
+import domain.ShoppingCart;
+import security.LoginService;
+import security.UserAccount;
+import utilities.AbstractTest;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations={
+		"classpath:spring/datasource.xml",
+		"classpath:spring/config/packages.xml"})
+@SuppressWarnings("unused")
+@Transactional
+@TransactionConfiguration(defaultRollback = true)
+public class InvoiceServiceTest extends AbstractTest{
+	
+	// ------------------- Supporting services -------------------
+	
+	@Autowired
+	private InvoiceService invoiceService;
+	@Autowired
+	private ShoppingCartService shoppingCartService;
+	
+	//----------------------------------------------------
+	// POSITIVE TEST CASES
+	//----------------------------------------------------
+	
+	//The system must be able to:
+	//List the invoices that the system stores.
+	//Without any logged user, we will try to obtain all invoices.
+	@Test
+	public void testListAll(){
+		Collection<Invoice> all=invoiceService.findAll();
+		Assert.isTrue(all.size()==0);
+	}
+	
+	//A user who is authenticated as Customer must be able to:
+	//List his invoices that the system stores.
+	//With an existing customer, we will try to obtain his invoices.
+	@Test
+	public void testListCustomer(){
+		authenticate("cust1");
+		Collection<Invoice> all=invoiceService.findByCustomer();
+		Assert.isTrue(all.size()==0);
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as Distributor must be able to:
+	//List his invoices that the system stores.
+	//With an existing distributor we will try to obtain his invoices.
+	@Test
+	public void testListDistributor(){
+		authenticate("distri1");
+		Collection<Invoice> all=invoiceService.findByCustomer();
+		Assert.isTrue(all.size()==0);
+		unauthenticate();
+	}
+	//A user who is authenticated as Producer must be able to:
+	//List his invoices that the system stores.
+	//With an existing producer we will try to obtain his invoices.
+	@Test
+	public void testListProducer(){
+		authenticate("produc1");
+		Collection<Invoice> all=invoiceService.findByCustomer();
+		Assert.isTrue(all.size()==0);
+		unauthenticate();
+	}
+		
+	//A user who is authenticated as an Customer must be able to:
+	//Create invoices.
+	//With an existing Customer we will try to create an invoice.
+	@Test
+	public void testCreateAndSave(){
+		authenticate("cust1");
+		
+		ShoppingCart shoppingCart = shoppingCartService.findAll().iterator().next();;
+		Invoice invoice = invoiceService.create(shoppingCart );
+
+		invoiceService.save(invoice);
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as an Customer must be able to:
+	//Edit invoices.
+	//With an existing Customer we will try to edit an invoice.
+	@Test
+	public void testEditAndSave(){
+		ShoppingCart shoppingCart = shoppingCartService.findAll().iterator().next();;
+		Invoice invoice = invoiceService.create(shoppingCart );
+		invoice.setCreationDate(new Date(new Date().getTime()-10000000));
+		invoiceService.save(invoice);
+		
+		Invoice invoiceDB = invoiceService.findAll().iterator().next();
+		invoiceDB.setCreationDate(new Date(new Date().getTime()-10));
+		
+		invoiceService.save(invoiceDB);
+	}
+	
+	//A user who is authenticated as an Customer must be able to:
+	//Delete one of his invoices.
+	//With an existing Customer we will try to delete an existing invoice.
+	@Test
+	public void testDelete(){
+		ShoppingCart shoppingCart = shoppingCartService.findAll().iterator().next();;
+		Invoice invoice = invoiceService.create(shoppingCart );
+		invoice.setCreationDate(new Date(200));
+		invoiceService.save(invoice);
+		
+		Invoice invoiceDB = invoiceService.findAll().iterator().next();
+		invoiceService.delete(invoiceDB);
+	}
+	
+	
+	//----------------------------------------------------
+	// NEGATIVE TEST CASES
+	//----------------------------------------------------
+	
+	//A user who is authenticated as Customer must be able to:
+	//List his invoices that the system stores.
+	//Without an existing customer, we will try to obtain his invoices.
+	@Test(expected=IllegalArgumentException.class)
+	public void testListCustomerException(){
+		Collection<Invoice> all=invoiceService.findByCustomer();
+		Assert.isTrue(all.size()==0);
+	}
+	
+	//A user who is authenticated as Distributor must be able to:
+	//List his invoices that the system stores.
+	//Without an existing distributor we will try to obtain his invoices.
+	@Test(expected=IllegalArgumentException.class)
+	public void testListDistributorException(){
+		Collection<Invoice> all=invoiceService.findByCustomer();
+		Assert.isTrue(all.size()==0);
+	}
+	//A user who is authenticated as Producer must be able to:
+	//List his invoices that the system stores.
+	//Without an existing producer we will try to obtain his invoices.
+	@Test(expected=IllegalArgumentException.class)
+	public void testListProducerException(){
+		Collection<Invoice> all=invoiceService.findByCustomer();
+		Assert.isTrue(all.size()==0);
+	}
+		
+	//A user who is authenticated as an Customer must be able to:
+	//Create invoices.
+	//With an existing Customer we will try to create an invoice
+	//with an invalid Shopping Cart.
+	@Test(expected=NullPointerException.class)
+	public void testCreateAndSaveException(){
+		authenticate("cust1");
+		
+		Invoice invoice = invoiceService.create(null );
+
+		invoiceService.save(invoice);
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as an Customer must be able to:
+	//Edit invoices.
+	//With an existing Customer we will try to edit an invoice
+	//and save it without a totalprice.
+	@Test
+	public void testEditAndSaveException(){
+		ShoppingCart shoppingCart = shoppingCartService.findAll().iterator().next();;
+		Invoice invoice = invoiceService.create(shoppingCart );
+		invoice.setCreationDate(new Date(new Date().getTime()-10000000));
+		invoiceService.save(invoice);
+		
+		Invoice invoiceDB = invoiceService.findAll().iterator().next();
+		invoiceDB.setTotalPrice(null);
+		
+		invoiceService.save(invoiceDB);
+	}
+	
+	//A user who is authenticated as an Customer must be able to:
+	//Delete one of his invoices.
+	//With an existing Customer we will try to delete an existing invoice
+	//from an empty list.
+	@Test(expected=NoSuchElementException.class)
+	public void testDeleteException(){
+		Invoice invoiceDB = invoiceService.findAll().iterator().next();
+		invoiceService.delete(invoiceDB);
+	}
+}

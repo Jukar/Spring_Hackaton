@@ -1,0 +1,110 @@
+package services;
+
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
+import domain.Comment;
+import domain.Customer;
+import domain.HistoryPrice;
+import domain.Item;
+import domain.Money;
+
+import repositories.HistoryPriceRepository;
+import security.Authority;
+import security.LoginService;
+import security.UserAccount;
+
+@Service
+@Transactional
+public class HistoryPriceService {
+//	Managed repository -----------------------------------------
+	@Autowired
+	private HistoryPriceRepository historyRepository;
+	
+//	Supporting services ----------------------------------------
+	@Autowired
+	private DistributorService distributorService;
+	
+//	Simple CRUD methods ----------------------------------------
+	public HistoryPrice create(Item item){
+		isDistributor();
+		HistoryPrice result=new HistoryPrice();
+		
+		result.setDistributorPrice(distributorService.findByUserAccount(LoginService.getPrincipal()));
+		result.setItem(item);
+		//La fecha de start debería ser creada aquí a partir de la última finishDate creada?
+		return result;
+	}
+	
+	public HistoryPrice findOne(int historyPriceId){
+		isDistributor();
+		HistoryPrice result;
+		result=historyRepository.findOne(historyPriceId);
+		return result;
+	}
+	
+	public Collection<HistoryPrice> findAll(){
+		isDistributor();
+		Collection<HistoryPrice> result;
+		result=historyRepository.findAll();
+		return result;
+	}
+	
+	public void save(HistoryPrice historyPrice){
+		isDistributor();
+		Assert.notNull(historyPrice);
+		historyRepository.save(historyPrice);
+	}
+	
+	public void delete(HistoryPrice historyPrice){
+		isDistributor();
+		Assert.notNull(historyPrice);
+		historyRepository.delete(historyPrice);
+	}
+	
+// Other business methods -------------------------------------
+	
+	public Collection<HistoryPrice> getHistoryPriceFromItemId(int itemId){
+		isDistributor();
+		Collection<HistoryPrice> result=historyRepository.getHistoryPriceFromItemId(itemId);
+		return result;
+	}
+	
+	public Collection<HistoryPrice> getHistoryFromItemAndDate(int itemId, Date date){
+		isDistributor();
+		Collection<HistoryPrice> result=historyRepository.getHistoryFromItemAndDate(itemId, date);
+		return result;
+	}
+	
+	private void isDistributor() {
+		UserAccount account=LoginService.getPrincipal();
+		Collection<Authority> authorities= account.getAuthorities();
+		Boolean res=false;
+		for(Authority a:authorities)
+			if(a.getAuthority().equals("DISTRIBUTOR")) res=true;
+		Assert.isTrue(res);
+	}
+	
+	// CASOS DE USO:
+	
+	public List<HistoryPrice> generateNewOne(Item item, Money money) {
+		// TODO R generador de HistoryPrice
+		//		Esto debe cerrar el ultimo HistoryPrice de item.getHistories colocando fechaFin a ACTUAL
+		//		Luego crear uno nuevo con la fecha de inico a ACTUAL en la que se añade la modificacion de
+		//		precio realizada por Producer o Distributer
+		
+		//		LA MISMA LLAMADA VALDRA PARA LOS DOS, sabremos que precio conservar y que sobreescribir en
+		// 		función del usuario logeado
+		
+		//		Devolvera item.getHistories (con la ultima modificada) + la nueva creada
+		return null;
+	}
+	
+}

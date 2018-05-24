@@ -1,0 +1,77 @@
+package services;
+
+import java.util.Collection;
+import java.util.Date;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
+import repositories.FolderRepository;
+import security.LoginService;
+import domain.Actor;
+import domain.Folder;
+import domain.Message;
+
+@Service
+@Transactional
+public class FolderService {
+//	Managed repository -----------------------------------------
+	@Autowired
+	private FolderRepository folderRepository;
+
+//	Supporting services ----------------------------------------
+	@Autowired
+	private ActorService actorService;
+	
+//	Simple CRUD methods ----------------------------------------
+	public Folder create(){
+		Folder result=new Folder();
+		return result;
+	}
+	
+	public Folder findOne(int folderId){
+		Folder result;
+		result=folderRepository.findOne(folderId);
+		return result;
+	}
+	
+	public Collection<Folder> findAll(){
+		Collection<Folder> result;
+		result=folderRepository.findAll();
+		return result;
+	}
+	
+	public void save(Folder folder){
+		Assert.notNull(folder);
+		folderRepository.save(folder);
+	}
+	
+	public void delete(Folder folder){
+		Assert.notNull(folder);
+		folderRepository.delete(folder);
+	}
+	
+// Other business methods -------------------------------------
+	public Folder getInboxFromActor(int actorId){
+		Folder result=folderRepository.getInboxFromActor(actorId);
+		return result;
+	}
+	public Folder getOutboxFromActor(int actorId){
+		Folder result=folderRepository.getOutboxFromActor(actorId);
+		return result;
+	}
+	
+	public Folder getInboxFromCurrentActor(){
+		Actor actor=actorService.findByUserAccount(LoginService.getPrincipal());
+		Folder result=folderRepository.getInboxFromActor(actor.getId());
+		return result;
+	}
+	public Folder getOutboxFromCurrentActor(){
+		Actor actor=actorService.findByUserAccount(LoginService.getPrincipal());
+		Folder result=folderRepository.getOutboxFromActor(actor.getId());
+		return result;
+	}
+}

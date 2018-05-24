@@ -1,0 +1,498 @@
+package services;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.RollbackException;
+
+import org.apache.commons.lang.time.DateUtils;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.transaction.TransactionConfiguration;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+
+import domain.HistoryPrice;
+import domain.Item;
+import domain.Money;
+import security.Authority;
+import security.LoginService;
+import security.UserAccount;
+import utilities.AbstractTest;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations={
+		"classpath:spring/datasource.xml",
+		"classpath:spring/config/packages.xml"})
+@SuppressWarnings("unused")
+@Transactional
+@TransactionConfiguration(defaultRollback = true)
+public class HistoryPriceServiceTest extends AbstractTest{
+	
+	// ------------------- Supporting services -------------------
+	
+	@Autowired
+	private HistoryPriceService historyPriceService;
+	@Autowired
+	private ItemService itemService;
+	
+	//----------------------------------------------------
+	// POSITIVE TEST CASES
+	//----------------------------------------------------
+	
+	//A user who is authenticated as a Distributor must be able to:
+	//List the historyPrices that the system stores.
+	//With an existing Distributor, we will try to obtain all History Prices.
+	@Test
+	public void testListAll(){
+		authenticate("distri1");
+		
+		Collection<HistoryPrice> all=historyPriceService.findAll();
+		Assert.notEmpty(all);
+		
+		unauthenticate();
+	}
+		
+	//A user who is authenticated as a Distributor must be able to:
+	//Create historyPrices.
+	//With an existing Distributor we will try to create a History Price.
+	@Test
+	public void testCreateAndSave(){
+		authenticate("distri1");
+		
+		Item item = itemService.findAll().iterator().next();
+		HistoryPrice historyPrice = historyPriceService.create(item);
+		historyPrice.setStartDate(new Date(20));
+
+		historyPriceService.save(historyPrice);
+		
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as a Distributor must be able to:
+	//Edit historyPrices.
+	//With an existing Distributor we will try to edit a History Price.
+	@Test
+	public void testEditAndSave(){
+		authenticate("distri1");	
+		
+		List<HistoryPrice> historyPrices = new ArrayList<HistoryPrice>(historyPriceService.findAll());
+
+		HistoryPrice historyPriceDB = historyPrices.get(historyPrices.size()-1);
+		historyPriceDB.setStartDate(new Date(100000));
+		
+		historyPriceService.save(historyPriceDB);
+		
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as a Distributor must be able to:
+	//Delete one of his historyPrices.
+	//With an existing Distributor we will try to delete an existing History Price.
+	@Test
+	public void testDelete(){
+		authenticate("distri1");
+
+		HistoryPrice historyPriceDB = historyPriceService.findAll().iterator().next();
+		historyPriceService.delete(historyPriceDB);
+
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as a Distributor must be able to:
+	//Find the historyPrices for an Item.
+	//With an existing Distributor we will try to find History Prices for an Item.
+	@Test
+	public void testGetHistoryPriceFromItemId(){
+		authenticate("distri1");
+		Item item = itemService.findAll().iterator().next();		
+		
+		Collection<HistoryPrice> all = historyPriceService.getHistoryPriceFromItemId(item.getId());
+		Assert.notEmpty(all);
+		
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as a Distributor must be able to:
+	//Find the historyPrices for an Item and a Date.
+	//With an existing Distributor we will try to find History Prices for an Item and a Date.
+	@Test
+	public void testGetHistoryFromItemAndDate(){
+		authenticate("distri1");
+		Item item = itemService.findAll().iterator().next();		
+		
+		//TODO Pendiente de metodo, correr tras comprobar
+		Collection<HistoryPrice> all = historyPriceService.getHistoryFromItemAndDate(item.getId(), new Date());
+		Assert.notEmpty(all);
+		
+		unauthenticate();
+	}
+
+	//A user who is authenticated as a Distributor must be able to:
+	//Find the las History Price for an Item.
+	//With an existing Distributor we will try to find the las History Price for an Item.
+	@Test
+	public void testGetLastFromItemId(){
+		authenticate("distri1");
+		Item item = itemService.findAll().iterator().next();		
+		
+		HistoryPrice hp = historyPriceService.getLastFromItemId(item.getId());
+		Assert.notNull(hp);
+		
+		unauthenticate();
+	}
+	
+
+	//----------------------------------------------------
+	// NEGATIVE TEST CASES
+	//----------------------------------------------------
+	
+		
+	//A user who is authenticated as a Distributor must be able to:
+	//Create historyPrices.
+	//With an existing Distributor we will try to create a History Price
+	//and try to save with a null Date.
+	@Test
+	public void testCreateAndSaveException(){
+		authenticate("distri1");
+		
+		Item item = itemService.findAll().iterator().next();
+		HistoryPrice historyPrice = historyPriceService.create(item);
+		historyPrice.setStartDate(null);
+
+		historyPriceService.save(historyPrice);
+		
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as a Distributor must be able to:
+	//Edit historyPrices.
+	//With an existing Distributor we will try to edit a History Price
+	//and try to save with a null Date..
+	@Test
+	public void testEditAndSaveException(){
+		authenticate("distri1");	
+		
+		List<HistoryPrice> historyPrices = new ArrayList<HistoryPrice>(historyPriceService.findAll());
+
+		HistoryPrice historyPriceDB = historyPrices.get(historyPrices.size()-1);
+		historyPriceDB.setStartDate(null);
+		
+		historyPriceService.save(historyPriceDB);
+		
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as a Distributor must be able to:
+	//Delete one of his historyPrices.
+	//Without an existing Distributor we will try to delete an existing History Price.
+	@Test(expected=IllegalArgumentException.class)
+	public void testDeleteException(){
+
+		HistoryPrice historyPriceDB = historyPriceService.findAll().iterator().next();
+		historyPriceService.delete(historyPriceDB);
+
+	}
+	
+	//A user who is authenticated as a Distributor must be able to:
+	//Find the historyPrices for an Item.
+	//With an existing Distributor we will try to find History Prices for an Item
+	//with an incorrect Id.
+	@Test(expected=NullPointerException.class)
+	public void testGetHistoryPriceFromItemIdException(){
+		authenticate("distri1");
+		Item item = itemService.findAll().iterator().next();		
+		
+		Collection<HistoryPrice> all = historyPriceService.getHistoryPriceFromItemId((Integer) null);
+		Assert.notEmpty(all);
+		
+		unauthenticate();
+	}
+	
+	//A user who is authenticated as a Distributor must be able to:
+	@SuppressWarnings("deprecation")
+	//Find the historyPrices for an Item and a Date.
+	//With an existing Distributor we will try to find History Prices for an Item and a Date
+	//with an incorrect date.
+	@Test(expected=IllegalArgumentException.class)
+	public void testGetHistoryFromItemAndDateException(){
+		authenticate("distri1");
+		Item item = itemService.findAll().iterator().next();		
+		
+		Collection<HistoryPrice> all=historyPriceService.getHistoryFromItemAndDate(item.getId(), new Date(""));
+		Assert.notEmpty(all);
+		
+		unauthenticate();
+	}
+
+	//A user who is authenticated as a Distributor must be able to:
+	//Find the las History Price for an Item.
+	//With an existing Distributor we will try to find the las History Price for an Item
+	//with an incorrect Id.
+	@Test(expected=IllegalArgumentException.class)
+	public void testGetLastFromItemIdException(){
+		authenticate("distri1");
+		Item item = itemService.findAll().iterator().next();		
+		
+		HistoryPrice hp = historyPriceService.getLastFromItemId(null);
+		Assert.notNull(hp);
+		
+		unauthenticate();
+	}
+	
+//	//A user who is not authenticated must be able to:
+//	//List the historyPrices that the system stores.
+//	//Without any logged user, we will expect a wrong result and catch the exception.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testListAllException(){
+//		Collection<HistoryPrice> all=historyPriceService.findAll();
+//		Assert.isTrue(all.size()==2);
+//	}
+//	
+//	//A user who is authenticated as Customer must be able to:
+//	//List the historyPrices that the system stores.
+//	//With an existing customer, we will expect a wrong result and catch the exception.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testListCustomerException(){
+//		authenticate("cust1");
+//		Collection<HistoryPrice> all=historyPriceService.findAll();
+//		Assert.isTrue(all.size()==2);
+//		unauthenticate();
+//	}
+//	
+//	//A user who is authenticated as Distributor must be able to:
+//	//List the historyPrices that the system stores.
+//	//With an existing distributor we will expect a wrong result and catch the exception.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testListDistributorException(){
+//		authenticate("distri1");
+//		Collection<HistoryPrice> all=historyPriceService.findAll();
+//		Assert.isTrue(all.size()==2);
+//		unauthenticate();
+//	}
+//	
+//	//A user who is authenticated as Producer must be able to:
+//	//List the historyPrices that the system stores.
+//	//With an existing producer we will expect a wrong result and catch the exception.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testListProducerException(){
+//		authenticate("produc1");
+//		Collection<HistoryPrice> all=historyPriceService.findAll();
+//		Assert.isTrue(all.size()==2);
+//		unauthenticate();
+//	}
+//		
+//	//A user who is authenticated as an Customer must be able to:
+//	//Create historyPrices.
+//	//With an existing Customer we will try to create a historyPrice and 
+//	//catch the exception produced if no text is introduced.
+//	@Test
+//	public void testCreateAndSaveException(){
+//		authenticate("cust1");
+//		
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText(null);
+//		historyPriceService.save(historyPrice);
+//		
+//		unauthenticate();
+//	}
+//	
+//	//A user who is authenticated as an Customer must be able to:
+//	//Edit historyPrices.
+//	//With an existing Customer we will try to create a historyPrice and 
+//	//catch the exception produced if no text is introduced.
+//	@Test
+//	public void testEditAndSaveException(){
+//		authenticate("cust1");
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText("testing");
+//		historyPriceService.save(historyPrice);		
+//		
+//		HistoryPrice historyPriceDB = historyPriceService.findAll().iterator().next();
+//		historyPriceDB.setText(null);
+//		historyPriceService.save(historyPriceDB);
+//		
+//		unauthenticate();
+//	}
+//	
+//	//A user who is authenticated as an Distributor must be able to:
+//	//Delete one of the historyPrices he or she organises, but not other Customer historyPrice
+//	//With an existing Customer we will try to delete an existing historyPrice and 
+//	//catch the exception.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testDeleteException(){
+//		authenticate("cust1");
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText("testing");
+//		historyPriceService.save(historyPrice);		
+//		unauthenticate();
+//		
+//		authenticate("cust2");
+//		
+//		HistoryPrice historyPriceDB = historyPriceService.findAll().iterator().next();
+//		historyPriceService.delete(historyPriceDB);
+//
+//		unauthenticate();
+//	}
+//	
+//	
+//	//A user who is not authenticated  must be able to:
+//	//Find the historyPrices for an Item.
+//	//Without an existing Customer we will try to find HistoryPrices for an Item
+//	//with an incorrect Id.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testFindByItemIdException(){
+//		authenticate("cust1");
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText("testing");
+//		historyPriceService.save(historyPrice);
+//		unauthenticate();
+//		
+//		Collection<HistoryPrice> all=historyPriceService.findByItemId(item.getId()+10);
+//		Assert.isTrue(all.size()==1);	
+//	}
+//	
+//	//A user who is authenticated as an Distributor must be able to:
+//	//Find the historyPrices for an Item.
+//	//With an existing Distributor we will try to find HistoryPrices for an Item
+//	//with an incorrect Id.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testFindByItemIdDistributorException(){
+//		authenticate("cust1");
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText("testing");
+//		historyPriceService.save(historyPrice);
+//		unauthenticate();
+//		
+//		authenticate("distri1");
+//		
+//		Collection<HistoryPrice> all=historyPriceService.findByItemId(item.getId()+10);
+//		Assert.isTrue(all.size()==1);
+//		
+//		unauthenticate();
+//	}
+//	
+//	//A user who is authenticated as an Producer must be able to:
+//	//Find the historyPrices for an Item.
+//	//With an existing Producer we will try to find HistoryPrices for an Item
+//	//with an incorrect Id.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testFindByItemIdProducerException(){
+//		authenticate("cust1");
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText("testing");
+//		historyPriceService.save(historyPrice);
+//		unauthenticate();
+//		
+//		authenticate("produc1");
+//		Collection<HistoryPrice> all=historyPriceService.findByItemId(item.getId()+10);
+//		Assert.isTrue(all.size()==1);
+//		
+//		unauthenticate();
+//	}
+//	
+//	//A user who is authenticated as an Customer must be able to:
+//	//Find the historyPrices for an Item.
+//	//With an existing Customer we will try to find HistoryPrices for an Item
+//	//with an incorrect Id.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testFindByItemIdCustomerException(){
+//		authenticate("cust1");
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText("testing");
+//		historyPriceService.save(historyPrice);
+//		
+//		Collection<HistoryPrice> all=historyPriceService.findByItemId(item.getId()+10);
+//		Assert.isTrue(all.size()==1);
+//		
+//		unauthenticate();
+//	}
+//	
+//	//A user who is not authenticated  must be able to:
+//	//Find the historyPrices for a Customer.
+//	//Without an existing Customer we will try to find HistoryPrices for a Customer
+//	//with an incorrect Id.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testFindByCustomerIdException(){
+//		authenticate("cust1");
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText("testing");
+//		historyPriceService.save(historyPrice);
+//		unauthenticate();
+//		
+//		Collection<HistoryPrice> all=historyPriceService.findByCustomerId(historyPrice.getCustomer().getId()+10);
+//		Assert.isTrue(all.size()==1);	
+//	}
+//	
+//	//A user who is authenticated as an Distributor must be able to:
+//	//Find the historyPrices for a Customer.
+//	//With an existing Distributor we will try to find HistoryPrices for a Customer
+//	//with an incorrect Id.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testFindByCustomerIdDistributorException(){
+//		authenticate("cust1");
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText("testing");
+//		historyPriceService.save(historyPrice);
+//		unauthenticate();
+//		
+//		authenticate("distri1");
+//		
+//		Collection<HistoryPrice> all=historyPriceService.findByCustomerId(historyPrice.getCustomer().getId()+10);
+//		Assert.isTrue(all.size()==1);
+//		
+//		unauthenticate();
+//	}
+//	
+//	//A user who is authenticated as an Producer must be able to:
+//	//Find the historyPrices for a Customer.
+//	//With an existing Producer we will try to find HistoryPrices for a Customer
+//	//with an incorrect Id.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testFindByCustomerIdProducerException(){
+//		authenticate("cust1");
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText("testing");
+//		historyPriceService.save(historyPrice);
+//		unauthenticate();
+//		
+//		authenticate("produc1");
+//		Collection<HistoryPrice> all=historyPriceService.findByCustomerId(historyPrice.getCustomer().getId()+10);
+//		Assert.isTrue(all.size()==1);
+//		
+//		unauthenticate();
+//	}
+//	
+//	//A user who is authenticated as an Customer must be able to:
+//	//Find the historyPrices for a Customer.
+//	//With an existing Customer we will try to find HistoryPrices for a Customer
+//	//with an incorrect Id.
+//	@Test(expected=IllegalArgumentException.class)
+//	public void testFindByCustomerIdCustomerException(){
+//		authenticate("cust1");
+//		Item item = itemService.findAll().iterator().next();
+//		HistoryPrice historyPrice = historyPriceService.create(item);
+//		historyPrice.setText("testing");
+//		historyPriceService.save(historyPrice);
+//		
+//		Collection<HistoryPrice> all=historyPriceService.findByCustomerId(historyPrice.getCustomer().getId()+10);
+//		Assert.isTrue(all.size()==1);
+//		
+//		unauthenticate();
+//	}
+}

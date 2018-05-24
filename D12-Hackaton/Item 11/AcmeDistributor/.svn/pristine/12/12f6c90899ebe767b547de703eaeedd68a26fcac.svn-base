@@ -1,0 +1,36 @@
+package domain;
+
+import java.util.Collection;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
+@Entity
+@Access(AccessType.PROPERTY)
+public class ProducerItem extends Item{
+//Attributes --------------------------------------------------------------
+//Getters&Setters ---------------------------------------------------------
+//Relationships------------------------------------------------------------
+	private Producer producer;
+	private Collection<EntryRegister> entryRegisters;
+	
+	@ManyToOne(optional = false)
+	public Producer getProducer() {
+		return producer;
+	}
+	public void setProducer(Producer producer) {
+		this.producer = producer;
+	}
+	
+	@OneToMany(cascade = CascadeType.ALL,mappedBy="sellingItem")
+	public Collection<EntryRegister> getEntryRegisters() {
+		return entryRegisters;
+	}
+	public void setEntryRegisters(Collection<EntryRegister> entryRegisters) {
+		this.entryRegisters = entryRegisters;
+	}
+}

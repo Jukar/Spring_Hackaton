@@ -1,0 +1,196 @@
+package services;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+
+import javax.persistence.RollbackException;
+
+import org.apache.commons.lang.time.DateUtils;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.transaction.TransactionConfiguration;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
+
+import domain.EntryRegister;
+import domain.Item;
+import domain.Money;
+import security.LoginService;
+import security.UserAccount;
+import utilities.AbstractTest;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations={
+		"classpath:spring/datasource.xml",
+		"classpath:spring/config/packages.xml"})
+@SuppressWarnings("unused")
+@Transactional
+@TransactionConfiguration(defaultRollback = true)
+public class EntryRegistertServiceTest extends AbstractTest{
+	
+	// ------------------- Supporting services -------------------
+	
+	@Autowired
+	private EntryRegisterService entryRegisterService;
+	@Autowired
+	private ItemService itemService;
+	
+	//----------------------------------------------------
+	// POSITIVE TEST CASES
+	//----------------------------------------------------
+	
+	//A user who is authenticated as Distributor must be able to:
+	//List the EntryRegisters that the system stores.
+	//With an existing Distributor we will try to obtain all Entry Registers.
+	@Test
+	public void testListDistributor(){
+		authenticate("distri1");
+		Collection<EntryRegister> all=entryRegisterService.findAll();
+		Assert.isTrue(all.size()==1);
+		unauthenticate();
+	}
+	
+	//The system must be able to:
+	//Edit one entryRegisters.
+	//We will try to edit an existing Entry Register.
+	@Test
+	public void testEditAndSave(){
+		
+		EntryRegister entryRegisterDB = entryRegisterService.findAll().iterator().next();
+		entryRegisterDB.setQuantity(12);
+		
+		entryRegisterService.save(entryRegisterDB);
+		
+	}
+	
+	//The system must be able to:
+	//Delete one of his entryRegisters.
+	//We will try to delete an existing Entry Register.
+	@Test
+	public void testDelete(){
+		
+		EntryRegister entryRegisterDB = entryRegisterService.findAll().iterator().next();
+		entryRegisterService.delete(entryRegisterDB);
+		
+	}
+	
+	//The system must be able to:
+	//Find the Entry Registers for an Item.
+	//We will try to find EntryRegisters for an Item.
+	@Test
+	public void testFindByItemId(){
+		Item item = itemService.findAll().iterator().next();
+		
+		Collection<EntryRegister> all=entryRegisterService.findByItem(item.getId());
+		Assert.isTrue(all.size()==1);	
+	}
+	
+	//The system must be able to:
+	//Find the entryRegisters after a Date.
+	//We will try to find EntryRegisters after a Date.
+	@Test
+	public void testFindAfterDate(){
+		
+		Collection<EntryRegister> all=entryRegisterService.findAfterDate(new Date(22));
+		Assert.isTrue(all.size()==1);
+	}
+	
+	//The system must be able to:
+	//Find the entryRegisters for an Item and after a Date.
+	//We will try to find EntryRegisters for an Item after a Date.
+	@Test
+	public void testFindAfterDateFromItem(){
+		
+		Collection<EntryRegister> all=entryRegisterService.findAfterDateFromItem(17, new Date(22));
+		Assert.isTrue(all.size()==1);
+	}
+	
+	//The system must be able to:
+	//Find the entryRegisters for a Warehouse.
+	//We will try to find EntryRegisters for a Warehouse.
+	@Test
+	public void testFindByWarehouse(){
+		
+		Collection<EntryRegister> all=entryRegisterService.findByWarehouse(21);
+		Assert.isTrue(all.size()==1);
+	}
+
+	//----------------------------------------------------
+	// NEGATIVE TEST CASES
+	//----------------------------------------------------
+	
+	//The system must be able to:
+	//Edit one entryRegisters.
+	//We will try to edit an existing Entry Register.
+	@Test(expected=NullPointerException.class)
+	public void testEditAndSaveException(){
+		
+		EntryRegister entryRegisterDB = entryRegisterService.findAll().iterator().next();
+		entryRegisterDB.setQuantity(null);
+		
+		entryRegisterService.save(entryRegisterDB);
+		
+	}
+	
+	//The system must be able to:
+	//Delete one of his entryRegisters.
+	//We will try to delete an existing Entry Register not present in the DB.
+	@Test
+	public void testDeleteException(){
+		
+		EntryRegister entryRegisterDB = new EntryRegister();
+		entryRegisterService.delete(entryRegisterDB);
+		
+	}
+	
+	//The system must be able to:
+	//Find the Entry Registers for an Item.
+	//We will try to find EntryRegisters for an Item
+	//with an incorrect Id.
+	@Test(expected=IllegalArgumentException.class)
+	public void testFindByItemIdException(){
+		Item item = itemService.findAll().iterator().next();
+		
+		Collection<EntryRegister> all=entryRegisterService.findByItem(item.getId()+10);
+		Assert.isTrue(all.size()==1);	
+	}
+	
+	//The system must be able to:
+	//Find the entryRegisters after a Date.
+	//We will try to find EntryRegisters after a Date
+	//with an incorrect Date.
+	@SuppressWarnings("deprecation")
+	@Test(expected=IllegalArgumentException.class)
+	public void testFindAfterDateException(){
+		
+		Collection<EntryRegister> all=entryRegisterService.findAfterDate(new Date(""));
+		Assert.isTrue(all.size()==1);
+	}
+	
+	//The system must be able to:
+	//Find the entryRegisters for an Item and after a Date.
+	//We will try to find EntryRegisters for an Item after a Date
+	//with an incorrect Id.
+	@Test(expected=IllegalArgumentException.class)
+	public void testFindAfterDateFromItemException(){
+		
+		Collection<EntryRegister> all=entryRegisterService.findAfterDateFromItem(17+10, new Date(22));
+		Assert.isTrue(all.size()==1);
+	}
+	
+	//The system must be able to:
+	//Find the entryRegisters for a Warehouse.
+	//We will try to find EntryRegisters for a Warehouse
+	//with an incorrect Id.
+	@Test(expected=IllegalArgumentException.class)
+	public void testFindByWarehouseException(){
+		
+		Collection<EntryRegister> all=entryRegisterService.findByWarehouse(21+10);
+		Assert.isTrue(all.size()==1);
+	}
+}

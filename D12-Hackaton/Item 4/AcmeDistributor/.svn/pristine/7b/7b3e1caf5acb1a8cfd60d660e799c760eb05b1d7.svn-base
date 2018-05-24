@@ -1,0 +1,93 @@
+package services;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
+import repositories.CustomerRepository;
+import security.Authority;
+import security.UserAccount;
+import domain.Comment;
+import domain.Customer;
+import domain.Folder;
+import domain.Invoice;
+import domain.Message;
+import domain.ShoppingCart;
+
+@Service
+@Transactional
+public class CustomerService {
+	@Autowired
+	private CustomerRepository customerRepository;
+//	Supporting services ----------------------------------------
+
+//	Simple CRUD methods ----------------------------------------
+	public Customer create(){
+		Customer result=new Customer();
+		
+		//TODO Se puede hacer en el reconstruct
+		UserAccount userAccount=new UserAccount();
+		
+		Authority authority=new Authority();
+		authority.setAuthority(Authority.CUSTOMER);
+		Collection<Authority> authorities = new ArrayList<Authority>();
+		authorities.add(authority);
+		userAccount.setAuthorities(authorities);
+		result.setUserAccount(userAccount);
+		
+		ShoppingCart cart=new ShoppingCart();
+		Collection<Invoice> invoices=new ArrayList<Invoice>();
+		Collection<Comment> comments=new ArrayList<Comment>();
+		
+		Folder inbox=new Folder();
+		Collection<Message> messagesI=new ArrayList<Message>();
+		inbox.setMessages(messagesI);
+		Folder outbox=new Folder();
+		Collection<Message> messagesO=new ArrayList<Message>();
+		inbox.setMessages(messagesO);
+		
+		
+		result.setInbox(inbox);
+		result.setOutbox(outbox);
+		result.setInvoices(invoices);
+		result.setComments(comments);
+		result.setShoppingCart(cart);
+		
+		return result;
+	}
+	
+	public Customer findOne(int customerId){
+		Customer result;
+		result=customerRepository.findOne(customerId);
+		return result;
+	}
+	
+	public Collection<Customer> findAll(){
+		Collection<Customer> result;
+		result=customerRepository.findAll();
+		return result;
+	}
+	
+	public void save(Customer customer){
+		Assert.notNull(customer);
+		customerRepository.save(customer);
+	}
+	
+	public void delete(Customer customer){
+		Assert.notNull(customer);
+		customerRepository.delete(customer);
+	}
+	
+//	Other business methods -------------------------------------
+	
+	public Customer findByUserAccount(UserAccount userAccount){		
+		Customer result=customerRepository.findByUserAccount(userAccount);
+		return result;
+	}
+	
+}

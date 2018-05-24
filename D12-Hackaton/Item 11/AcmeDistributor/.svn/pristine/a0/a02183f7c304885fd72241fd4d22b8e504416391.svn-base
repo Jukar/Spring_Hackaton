@@ -1,0 +1,27 @@
+package domain;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+
+import java.util.Collection;
+
+@Entity
+@Access(AccessType.PROPERTY)
+public class ShoppingCart extends DomainEntity{
+//Attributes --------------------------------------------------------------
+//Getters&Setters ---------------------------------------------------------
+//Relationships------------------------------------------------------------
+	private Collection<ShoppingLine> lines;
+
+	@OneToMany(cascade = CascadeType.ALL,mappedBy="shoppingCart")
+	public Collection<ShoppingLine> getLines() {
+		return lines;
+	}
+
+	public void setLines(Collection<ShoppingLine> lines) {
+		this.lines = lines;
+	}
+}

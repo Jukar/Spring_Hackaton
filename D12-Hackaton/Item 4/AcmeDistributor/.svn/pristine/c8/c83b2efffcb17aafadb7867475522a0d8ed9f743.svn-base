@@ -1,0 +1,104 @@
+package services;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
+import repositories.InvoiceRepository;
+import security.LoginService;
+import security.UserAccount;
+import domain.Customer;
+import domain.Invoice;
+import domain.Money;
+import domain.ShoppingCart;
+import domain.ShoppingLine;
+
+@Service
+@Transactional
+public class InvoiceService {
+	@Autowired
+	private InvoiceRepository invoiceRepository;
+//	Supporting services ----------------------------------------
+	@Autowired
+	private ShoppingLineService shoppingLineService;
+	@Autowired
+	private CustomerService customerService;
+	
+//	Simple CRUD methods ----------------------------------------
+	public Invoice create(ShoppingCart shoppingCart){
+		Invoice result=new Invoice();
+		Collection<ShoppingLine> shoppingLines= shoppingCart.getLines();
+		String currency="eur";
+//		String currency=null;
+		double amount=0.0;
+		for(ShoppingLine sl:shoppingLines){
+			//Ligar con servicio de totalLine
+			Money totalLine=shoppingLineService.getTotalLine(sl);
+			amount+=totalLine.getAmount();
+//			if(currency==null) currency=totalLine.getCurrency();
+		}
+		Money totalPrice=new Money();
+		totalPrice.setAmount(amount);
+		totalPrice.setCurrency(currency);
+		result.setTotalPrice(totalPrice);
+		
+		result.setLines(shoppingLines);
+		result.setCustomer(shoppingCart.getCustomer());
+		result.setCreationDate(new Date());
+		
+		return result;
+	}
+	
+	public Invoice findOne(int invoice){
+		Invoice result;
+		result=invoiceRepository.findOne(invoice);
+		return result;
+	}
+	
+	public Collection<Invoice> findAll(){
+		Collection<Invoice> result;
+		result=invoiceRepository.findAll();
+		return result;
+	}
+	
+	public void save(Invoice invoice){
+		Assert.notNull(invoice);
+//		Collection<ShoppingLine> shoppingLines= invoice.getLines();
+//		for(ShoppingLine sl:shoppingLines){
+//			//Ligar con servicio de totalLine
+//			shoppingLineService.compareStock(invoice.getLines());
+//		}
+//		for(ShoppingLine sl:shoppingLines){
+//			//Ligar con servicio de totalLine
+//			shoppingLineService.reduceStock(invoice.getLines());
+//		}
+		invoiceRepository.save(invoice);
+	}
+	
+	public void delete(Invoice invoice){
+		Assert.notNull(invoice);
+		invoiceRepository.delete(invoice);
+	}
+	
+//	Other business methods -------------------------------------
+	public Collection<Invoice> findByCustomer(){
+		UserAccount account=LoginService.getPrincipal();	
+		Customer customer=customerService.findByUserAccount(account);
+		Collection<Invoice> result=invoiceRepository.findByCustomer(customer);
+		return result;
+	}
+	public Collection<Invoice> findByCustomer(Customer customer){		
+		Collection<Invoice> result=invoiceRepository.findByCustomer(customer);
+		return result;
+	}
+	public Collection<Invoice> canBeReturn(Customer customer,Date date){		
+		Collection<Invoice> result=invoiceRepository.findByCustomerAfterDate(customer, date);
+		return result;
+	}
+}

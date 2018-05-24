@@ -1,0 +1,26 @@
+package domain;
+
+import java.util.Collection;
+
+import javax.persistence.Access;
+import javax.persistence.AccessType;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.OneToMany;
+
+@Entity
+@Access(AccessType.PROPERTY)
+public class Producer extends Actor{
+//Attributes --------------------------------------------------------------
+//Getters&Setters ---------------------------------------------------------
+//Relationships------------------------------------------------------------
+	Collection<ProducerItem> items;
+
+	@OneToMany(cascade = CascadeType.ALL,mappedBy="producer")
+	public Collection<ProducerItem> getItems() {
+		return items;
+	}
+	public void setItems(Collection<ProducerItem> items) {
+		this.items = items;
+	}
+}
